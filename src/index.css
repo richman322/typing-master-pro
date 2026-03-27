@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased transition-colors duration-300;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Modern Utilities */
+.glass-panel {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 dark:bg-black/20 dark:border-white/5 rounded-2xl;
+}
+
+.saas-shadow {
+  @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)];
+}
+
+.saas-gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold;
+}
+
+/* Typing specific refined styles */
+.typing-font {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.urdu-font {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  line-height: 2.5;
+}
+
+.arabic-font {
+  font-family: 'Noto Naskh Arabic', serif;
+  line-height: 2;
+}
+
+.phantom-viewport {
+  @apply relative overflow-hidden rounded-3xl bg-card border border-border shadow-2xl transition-all duration-500;
+  width: 100%;
+  max-width: 1000px;
+  height: 350px;
+}
+
+.char-correct { @apply text-emerald-500 transition-colors duration-200; }
+.char-wrong { @apply text-rose-500 bg-rose-500/10 rounded-sm transition-colors duration-200; }
+.char-untyped { @apply text-muted-foreground/30; }
+
+.cursor-smooth {
+  @apply absolute bottom-0 left-0 w-[2px] h-[1.2em] bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)];
+}
+
+/* GPA Calculator Styles */
+.input-minimal {
+  @apply bg-background border border-input rounded-xl px-4 py-2 focus:ring-2 focus:ring-ring focus:outline-none transition-all;
+}
+
+.btn-modern {
+  @apply inline-flex items-center justify-center rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow active:scale-95;
+}
+
+.btn-modern-outline {
+  @apply inline-flex items-center justify-center rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground active:scale-95;
+}
