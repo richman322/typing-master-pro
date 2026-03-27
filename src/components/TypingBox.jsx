@@ -50,17 +50,17 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       // We want the current line to stay at a fixed relative position.
       if (charTop !== lastOffsetTop.current) {
         const container = scrollRef.current;
-        const padding = parseFloat(getComputedStyle(container).paddingTop) || 32;
-        
-        // Target: Scroll so the current line is always at the top of the viewport.
-        // We use immediate scroll (behavior: 'auto') for better reliability across mobile browsers.
-        const targetScroll = charTop - padding;
-        
-        container.scrollTo({
-          top: targetScroll,
-          behavior: 'auto'
-        });
-        
+
+        // Detect line change ONLY
+        if (charTop > lastOffsetTop.current) {
+          const lineHeight = activeChar.offsetHeight + 8; // adjust gap if needed
+
+          container.scrollTo({
+            top: container.scrollTop + lineHeight,
+            behavior: 'smooth'
+          });
+        }
+
         lastOffsetTop.current = charTop;
       }
     }

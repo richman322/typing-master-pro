@@ -19,8 +19,8 @@ const GpaCalculator = () => {
   
   // GPA State
   const [subjects, setSubjects] = useState([
-    { id: 1, name: '', creditHours: 3, grade: 'A' },
-    { id: 2, name: '', creditHours: 3, grade: 'B' }
+    { id: 1, name: '', creditHours: 3, qualityPoints: 4.0 },
+    { id: 2, name: '', creditHours: 3, qualityPoints: 3.0 }
   ]);
 
   // CGPA State
@@ -31,7 +31,7 @@ const GpaCalculator = () => {
 
   // GPA Methods
   const addSubject = () => {
-    setSubjects([...subjects, { id: Date.now(), name: '', creditHours: 3, grade: 'A' }]);
+    setSubjects([...subjects, { id: Date.now(), name: '', creditHours: 3, qualityPoints: 4.0 }]);
   };
 
   const removeSubject = (id) => {
@@ -51,8 +51,8 @@ const GpaCalculator = () => {
     let totalCredits = 0;
     subjects.forEach(s => {
       const credits = parseFloat(s.creditHours) || 0;
-      const gp = gradePoints[s.grade] || 0;
-      totalQualityPoints += gp * credits;
+      const qp = parseFloat(s.qualityPoints) || 0;
+      totalQualityPoints += qp * credits;
       totalCredits += credits;
     });
     const gpa = totalCredits > 0 ? (totalQualityPoints / totalCredits).toFixed(2) : '0.00';
@@ -153,7 +153,7 @@ const GpaCalculator = () => {
                   <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     <div className="col-span-6">Subject Name</div>
                     <div className="col-span-3 text-center">Credit Hours</div>
-                    <div className="col-span-2 text-center">Grade</div>
+                    <div className="col-span-2 text-center">Quality Points</div>
                     <div className="col-span-1"></div>
                   </div>
 
@@ -186,16 +186,17 @@ const GpaCalculator = () => {
                         />
                       </div>
                       <div className="col-span-4 md:col-span-2 flex flex-col gap-1">
-                        <label className="md:hidden text-[10px] font-black uppercase text-muted-foreground ml-1">Grade</label>
-                        <select 
-                          className="input-minimal w-full text-center cursor-pointer text-sm font-bold bg-background appearance-none"
-                          value={s.grade}
-                          onChange={(e) => updateSubject(s.id, 'grade', e.target.value)}
-                        >
-                          {Object.keys(gradePoints).map(g => (
-                            <option key={g} value={g}>{g}</option>
-                          ))}
-                        </select>
+                        <label className="md:hidden text-[10px] font-black uppercase text-muted-foreground ml-1">Points</label>
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          min="0"
+                          max="4"
+                          placeholder="0.00"
+                          className="input-minimal w-full text-center text-sm font-bold bg-background"
+                          value={s.qualityPoints}
+                          onChange={(e) => updateSubject(s.id, 'qualityPoints', e.target.value)}
+                        />
                       </div>
                       <div className="col-span-2 md:col-span-1 flex justify-end">
                         <button 
