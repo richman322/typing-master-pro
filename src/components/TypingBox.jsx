@@ -33,33 +33,32 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   useEffect(() => {
     const activeChar = scrollRef.current?.querySelector('.cursor-trigger');
-    if (activeChar && scrollRef.current) {
-      const charRect = activeChar.getBoundingClientRect();
+    const container = scrollRef.current;
+    
+    if (activeChar && container) {
       const charTop = activeChar.offsetTop;
+      const charHeight = activeChar.offsetHeight || 40;
       
       setCursorPos({
         top: charTop,
         left: activeChar.offsetLeft,
-        width: charRect.width,
-        height: charRect.height
+        width: activeChar.offsetWidth,
+        height: charHeight
       });
 
-      const container = scrollRef.current;
-      
-      // Line-by-line auto shift logic
+      // VIRTUAL WINDOW SCROLLING
+      // We want the current line to stay at a fixed relative position.
       if (charTop !== lastOffsetTop.current) {
-        // When we move to a new line, we want to scroll the container
-        // to hide the lines above the current one.
         const container = scrollRef.current;
         const padding = parseFloat(getComputedStyle(container).paddingTop) || 32;
         
-        // Target scroll is the top of the current character minus the top padding
-        // This effectively pushes the previous line(s) out of the viewport
+        // Target: Scroll so the current line is always at the top of the viewport.
+        // We use immediate scroll (behavior: 'auto') for better reliability across mobile browsers.
         const targetScroll = charTop - padding;
         
         container.scrollTo({
-          top: Math.max(0, targetScroll),
-          behavior: 'smooth'
+          top: targetScroll,
+          behavior: 'auto'
         });
         
         lastOffsetTop.current = charTop;

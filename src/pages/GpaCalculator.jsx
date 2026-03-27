@@ -46,52 +46,38 @@ const GpaCalculator = () => {
     setSubjects(subjects.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
 
-  const calculateGpa = () => {
-    let totalPoints = 0;
+  const getGpaStats = () => {
+    let totalQualityPoints = 0;
     let totalCredits = 0;
     subjects.forEach(s => {
       const credits = parseFloat(s.creditHours) || 0;
       const gp = gradePoints[s.grade] || 0;
-      totalPoints += gp * credits;
+      totalQualityPoints += gp * credits;
       totalCredits += credits;
     });
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+    const gpa = totalCredits > 0 ? (totalQualityPoints / totalCredits).toFixed(2) : '0.00';
+    return { gpa, totalQualityPoints, totalCredits };
   };
 
-  // CGPA Methods
-  const addSemester = () => {
-    setSemesters([...semesters, { 
-      id: Date.now(), 
-      name: `Semester ${semesters.length + 1}`, 
-      gpa: 3.5, 
-      creditHours: 18 
-    }]);
-  };
-
-  const removeSemester = (id) => {
-    if (semesters.length === 1) return;
-    setSemesters(semesters.filter(s => s.id !== id));
-  };
-
-  const updateSemester = (id, field, value) => {
-    setSemesters(semesters.map(s => s.id === id ? { ...s, [field]: value } : s));
-  };
-
-  const calculateCgpa = () => {
-    let totalPoints = 0;
+  const getCgpaStats = () => {
+    let totalQualityPoints = 0;
     let totalCredits = 0;
     semesters.forEach(s => {
       const gpa = parseFloat(s.gpa) || 0;
       const credits = parseFloat(s.creditHours) || 0;
-      totalPoints += gpa * credits;
+      totalQualityPoints += gpa * credits;
       totalCredits += credits;
     });
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+    const cgpa = totalCredits > 0 ? (totalQualityPoints / totalCredits).toFixed(2) : '0.00';
+    return { cgpa, totalQualityPoints, totalCredits };
   };
+
+  const gpaStats = getGpaStats();
+  const cgpaStats = getCgpaStats();
 
   const handleShare = () => {
     const type = activeTab.toUpperCase();
-    const value = activeTab === 'gpa' ? calculateGpa() : calculateCgpa();
+    const value = activeTab === 'gpa' ? gpaStats.gpa : cgpaStats.cgpa;
     const text = `📊 My ${type} on PhantomType is ${value}! Calculate yours at ${window.location.origin}`;
     
     navigator.clipboard.writeText(text);
@@ -337,19 +323,27 @@ const GpaCalculator = () => {
                 Your Calculated {activeTab.toUpperCase()}
               </h4>
               <div className="text-7xl font-black tracking-tighter mb-8 drop-shadow-2xl">
-                {activeTab === 'gpa' ? calculateGpa() : calculateCgpa()}
+                {activeTab === 'gpa' ? gpaStats.gpa : cgpaStats.cgpa}
               </div>
               
               <div className="w-full h-[1px] bg-white/10 mb-8" />
               
               <div className="grid grid-cols-2 w-full gap-4 mb-8">
                 <div className="text-left">
-                  <div className="text-[10px] font-black uppercase opacity-60">Status</div>
-                  <div className="font-bold">Pass</div>
+                  <div className="text-[10px] font-black uppercase opacity-60">
+                    Total Quality Points
+                  </div>
+                  <div className="font-bold">
+                    {activeTab === 'gpa' ? gpaStats.totalQualityPoints.toFixed(1) : cgpaStats.totalQualityPoints.toFixed(1)}
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] font-black uppercase opacity-60">Scale</div>
-                  <div className="font-bold">4.0 / GCUF</div>
+                  <div className="text-[10px] font-black uppercase opacity-60">
+                    Total Credit Hours
+                  </div>
+                  <div className="font-bold">
+                    {activeTab === 'gpa' ? gpaStats.totalCredits : cgpaStats.totalCredits}
+                  </div>
                 </div>
               </div>
 
