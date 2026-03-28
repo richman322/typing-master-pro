@@ -97,7 +97,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   return (
     <div 
-      className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[180px] md:h-[220px] bg-card/50 backdrop-blur-sm border-border/50"
+      className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card/50 backdrop-blur-sm border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
       {/* Scrollable Container Animated via Motion */}

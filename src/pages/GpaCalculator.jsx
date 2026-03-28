@@ -7,13 +7,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const gradePoints = {
-  'A+': 4.0, 'A': 4.0, 'A-': 3.7,
-  'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-  'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-  'D+': 1.3, 'D': 1.0, 'F': 0.0
-};
-
 const GpaCalculator = () => {
   const [activeTab, setActiveTab] = useState('gpa'); // 'gpa' or 'cgpa'
   
@@ -25,8 +18,8 @@ const GpaCalculator = () => {
 
   // CGPA State
   const [semesters, setSemesters] = useState([
-    { id: 1, name: 'Semester 1', gpa: 3.5, creditHours: 18 },
-    { id: 2, name: 'Semester 2', gpa: 3.8, creditHours: 18 }
+    { id: 1, name: 'Semester 1', gpa: 3.5 },
+    { id: 2, name: 'Semester 2', gpa: 3.8 }
   ]);
 
   // GPA Methods
@@ -49,7 +42,7 @@ const GpaCalculator = () => {
   // CGPA Methods
   const addSemester = () => {
     const nextId = semesters.length + 1;
-    setSemesters([...semesters, { id: Date.now(), name: `Semester ${nextId}`, gpa: 3.5, creditHours: 18 }]);
+    setSemesters([...semesters, { id: Date.now(), name: `Semester ${nextId}`, gpa: 3.5 }]);
   };
 
   const removeSemester = (id) => {
@@ -70,6 +63,7 @@ const GpaCalculator = () => {
     subjects.forEach(s => {
       const credits = parseFloat(s.creditHours) || 0;
       const qp = parseFloat(s.qualityPoints) || 0;
+      // Fixed: Total Quality Points should be QP * Credits
       totalQualityPoints += qp * credits;
       totalCredits += credits;
     });
@@ -78,16 +72,13 @@ const GpaCalculator = () => {
   };
 
   const getCgpaStats = () => {
-    let totalQualityPoints = 0;
-    let totalCredits = 0;
+    let sumGpa = 0;
     semesters.forEach(s => {
-      const gpa = parseFloat(s.gpa) || 0;
-      const credits = parseFloat(s.creditHours) || 0;
-      totalQualityPoints += gpa * credits;
-      totalCredits += credits;
+      sumGpa += parseFloat(s.gpa) || 0;
     });
-    const cgpa = totalCredits > 0 ? (totalQualityPoints / totalCredits).toFixed(2) : '0.00';
-    return { cgpa, totalQualityPoints, totalCredits };
+    // Formula: sum of all semesters gpa / no of semesters
+    const cgpa = semesters.length > 0 ? (sumGpa / semesters.length).toFixed(2) : '0.00';
+    return { cgpa, count: semesters.length };
   };
 
   const gpaStats = getGpaStats();
@@ -160,7 +151,7 @@ const GpaCalculator = () => {
                     Subject Entries
                   </h3>
                   <button 
-                    onClick={() => setSubjects([{ id: Date.now(), name: '', creditHours: 3, grade: 'A' }])}
+                    onClick={() => setSubjects([{ id: Date.now(), name: '', creditHours: 3, qualityPoints: 4.0 }])}
                     className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-2"
                   >
                     <RefreshCcw size={14} /> Reset
@@ -252,7 +243,7 @@ const GpaCalculator = () => {
                     Semester Overview
                   </h3>
                   <button 
-                    onClick={() => setSemesters([{ id: Date.now(), name: 'Semester 1', gpa: 3.5, creditHours: 18 }])}
+                    onClick={() => setSemesters([{ id: Date.now(), name: 'Semester 1', gpa: 3.5 }])}
                     className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-2"
                   >
                     <RefreshCcw size={14} /> Reset
@@ -261,9 +252,8 @@ const GpaCalculator = () => {
 
                 <div className="space-y-6">
                   <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <div className="col-span-5">Semester Name</div>
+                    <div className="col-span-8">Semester Name</div>
                     <div className="col-span-3 text-center">Semester GPA</div>
-                    <div className="col-span-3 text-center">Total Credits</div>
                     <div className="col-span-1"></div>
                   </div>
 
@@ -275,7 +265,7 @@ const GpaCalculator = () => {
                       key={sem.id} 
                       className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:p-0 rounded-2xl md:rounded-none bg-secondary/30 md:bg-transparent border border-border/50 md:border-none"
                     >
-                      <div className="w-full md:col-span-5">
+                      <div className="w-full md:col-span-8">
                         <div className="input-minimal w-full bg-secondary/50 font-bold text-sm text-muted-foreground">
                           {sem.name}
                         </div>
@@ -292,17 +282,6 @@ const GpaCalculator = () => {
                             className="input-minimal w-full text-center font-black text-indigo-500"
                             value={sem.gpa}
                             onChange={(e) => updateSemester(sem.id, 'gpa', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div className="flex-1 md:col-span-3 flex flex-col gap-1">
-                          <label className="md:hidden text-[10px] font-black uppercase text-muted-foreground ml-1">Credits</label>
-                          <input 
-                            type="number" 
-                            min="1"
-                            className="input-minimal w-full text-center font-bold"
-                            value={sem.creditHours}
-                            onChange={(e) => updateSemester(sem.id, 'creditHours', e.target.value)}
                           />
                         </div>
 
@@ -350,18 +329,18 @@ const GpaCalculator = () => {
               <div className="grid grid-cols-2 w-full gap-4 mb-8">
                 <div className="text-left">
                   <div className="text-[10px] font-black uppercase opacity-60">
-                    Total Quality Points
+                    {activeTab === 'gpa' ? 'Total Quality Points' : 'Total Semesters'}
                   </div>
                   <div className="font-bold">
-                    {activeTab === 'gpa' ? gpaStats.totalQualityPoints.toFixed(1) : cgpaStats.totalQualityPoints.toFixed(1)}
+                    {activeTab === 'gpa' ? gpaStats.totalQualityPoints.toFixed(1) : cgpaStats.count}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] font-black uppercase opacity-60">
-                    Total Credit Hours
+                    {activeTab === 'gpa' ? 'Total Credit Hours' : 'Avg per Semester'}
                   </div>
                   <div className="font-bold">
-                    {activeTab === 'gpa' ? gpaStats.totalCredits : cgpaStats.totalCredits}
+                    {activeTab === 'gpa' ? gpaStats.totalCredits : cgpaStats.cgpa}
                   </div>
                 </div>
               </div>
