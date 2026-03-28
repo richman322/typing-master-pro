@@ -32,36 +32,42 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   }, []);
 
   useEffect(() => {
-    const activeChar = containerRef.current?.querySelector('.char-active');
-    
-    if (activeChar) {
-      const charTop = activeChar.offsetTop;
-      const charHeight = activeChar.offsetHeight || 40;
+    // Use timeout to ensure DOM is updated before measurement
+    const timeoutId = setTimeout(() => {
+      const activeChar = containerRef.current?.querySelector('.char-active');
       
-      setCursorPos({
-        top: charTop,
-        left: activeChar.offsetLeft,
-        width: activeChar.offsetWidth,
-        height: charHeight
-      });
+      if (activeChar) {
+        const charTop = activeChar.offsetTop;
+        const charHeight = activeChar.offsetHeight || 40;
+        
+        setCursorPos({
+          top: charTop,
+          left: activeChar.offsetLeft,
+          width: activeChar.offsetWidth,
+          height: charHeight
+        });
 
-      // REFINED LINE SHIFTING LOGIC
-      // We want to keep the text starting from the top.
-      // paddingTop is 32px (py-8).
-      const paddingTop = 32; 
-      const lineThreshold = paddingTop + (charHeight * 1.5); // Start shifting after ~2nd line
-      
-      if (charTop > lineThreshold) {
-        // Shift up smoothly to keep the active line at the threshold position
-        setScrollOffset(-(charTop - lineThreshold));
-      } else {
-        setScrollOffset(0);
+        // REFINED STABLE LINE SHIFTING
+        // We use p-12 (48px) as vertical padding.
+        const padding = 48; 
+        // We want to keep the current line around the middle or top-middle.
+        // Let's start shifting after the 2nd line.
+        const threshold = padding + (charHeight * 1); 
+
+        if (charTop > threshold) {
+          // Stay 1 line below the top padding for better visibility
+          setScrollOffset(-(charTop - threshold));
+        } else {
+          setScrollOffset(0);
+        }
       }
-    }
+    }, 0);
     
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
+
+    return () => clearTimeout(timeoutId);
   }, [userInput, words, onAppend]);
 
   const playClick = () => {
@@ -98,18 +104,18 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   return (
     <div 
-      className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card/50 backdrop-blur-sm border-border/50"
+      className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
-      {/* Bottom Fade only - removed top fade to show first line clearly */}
-      <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-card to-transparent z-30 pointer-events-none" />
+      {/* Bottom Subtle Fade */}
+      <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-card to-transparent z-30 pointer-events-none" />
 
       {/* Scrollable Container Animated via Motion */}
       <motion.div 
         ref={containerRef}
         animate={{ y: scrollOffset }}
         transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
-        className="w-full px-12 py-8 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
+        className="w-full p-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
       >
         <input
           ref={inputRef}
