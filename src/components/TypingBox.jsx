@@ -9,6 +9,18 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const containerRef = useRef(null);
   const [activeLineTop, setActiveLineTop] = useState(0);
 
+  // RESET SCROLL POSITION ON INITIAL LOAD
+  useEffect(() => {
+    setScrollOffset(0);
+    setActiveLineTop(0);
+    if (containerRef.current) {
+      containerRef.current.scrollTo({
+        top: 0,
+        behavior: 'auto'
+      });
+    }
+  }, [words]);
+
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
     window.addEventListener('focus', focus);
