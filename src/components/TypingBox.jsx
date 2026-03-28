@@ -51,7 +51,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   // Use useLayoutEffect to measure before the browser paints
   useLayoutEffect(() => {
-    const activeChar = containerRef.current?.querySelector('.char-active');
+    const activeChar = scrollRef.current?.querySelector('.char-active');
     
     if (activeChar) {
       const charTop = activeChar.offsetTop;
@@ -69,16 +69,10 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         setActiveLineTop(charTop);
         
         // STABLE LINE SHIFTING LOGIC
-        // py-12 is 48px
         const padding = 48;
-        // Keep at least 2 lines visible before starting to scroll.
-        // Once we pass the 2nd line, we shift the container up.
-        // This threshold allows the first 2 lines to be perfectly stable.
         const threshold = padding + (charHeight * 1.5); 
 
         if (charTop > threshold) {
-          // Calculate how much we need to shift to keep the current line 
-          // at a consistent "focus" position (roughly 1.5 lines down from top)
           setScrollOffset(-(charTop - threshold));
         } else {
           setScrollOffset(0);
@@ -130,7 +124,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     >
       {/* Scrollable Container Animated via Motion */}
       <motion.div 
-        ref={containerRef}
+        ref={scrollRef}
         animate={{ y: scrollOffset }}
         transition={{ type: "spring", damping: 35, stiffness: 250, mass: 0.5 }}
         className="w-full p-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
