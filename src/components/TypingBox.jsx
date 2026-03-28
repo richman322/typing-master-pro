@@ -18,23 +18,29 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const isEasy = difficulty === 'easy';
   const visualOffset = isEasy ? 0 : (difficulty === 'medium' ? 80 : 120);
   const basePadding = 48;
-  const paddingTop = basePadding + visualOffset;
+  const currentLineRef = useRef(0);
+  const lastOffsetTop = useRef(0);
+  const prevWordsLengthRef = useRef(words.length);
 
-  // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD
+  // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD OR APPEND
   useEffect(() => {
     const container = scrollRef.current;
+    const isAppend = words.length > prevWordsLengthRef.current;
 
     if (container) {
       setTimeout(() => {
-        container.scrollTop = 0;
-        setScrollOffset(0);
-        setActiveLineTop(0);
-        currentLineRef.current = 0;
-        lastOffsetTop.current = 0;
+        // Apply reset if it's a fresh start OR an append operation
+        if (words.length <= 10 || isAppend) {
+          container.scrollTop = 0;
+          setScrollOffset(0);
+          setActiveLineTop(0);
+          currentLineRef.current = 0;
+          lastOffsetTop.current = 0;
+        }
       }, 0);
     }
+    prevWordsLengthRef.current = words.length;
   }, [words]);
-
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
     window.addEventListener('focus', focus);
