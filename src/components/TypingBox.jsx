@@ -78,11 +78,11 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         setActiveLineTop(charTop);
         
         // STABLE LINE SHIFTING LOGIC
-        // py-12 is 48px. We adjust the threshold to wait longer for Medium/Hard
-        // so the shifter doesn't trigger 3-4 lines too early.
+        // Easy: Wait for 1.5 lines before shifting (original behavior)
+        // Medium/Hard: Start shifting immediately to keep line at the starting focus point
         const threshold = isEasy 
           ? paddingTop + (charHeight * 1.5) 
-          : paddingTop + (charHeight * 4.5); 
+          : paddingTop; 
 
         if (charTop > threshold) {
           setScrollOffset(-(charTop - threshold));
