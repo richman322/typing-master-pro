@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled }) => {
@@ -7,6 +7,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const [scrollOffset, setScrollOffset] = useState(0);
   const containerRef = useRef(null);
+  const [activeLineTop, setActiveLineTop] = useState(0);
 
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
@@ -31,44 +32,47 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     };
   }, []);
 
-  useEffect(() => {
-    // Use timeout to ensure DOM is updated before measurement
-    const timeoutId = setTimeout(() => {
-      const activeChar = containerRef.current?.querySelector('.char-active');
+  // Use useLayoutEffect to measure before the browser paints
+  useLayoutEffect(() => {
+    const activeChar = containerRef.current?.querySelector('.char-active');
+    
+    if (activeChar) {
+      const charTop = activeChar.offsetTop;
+      const charHeight = activeChar.offsetHeight || 40;
+      const charLeft = activeChar.offsetLeft;
       
-      if (activeChar) {
-        const charTop = activeChar.offsetTop;
-        const charHeight = activeChar.offsetHeight || 40;
-        
-        setCursorPos({
-          top: charTop,
-          left: activeChar.offsetLeft,
-          width: activeChar.offsetWidth,
-          height: charHeight
-        });
+      setCursorPos({
+        top: charTop,
+        left: charLeft,
+        width: activeChar.offsetWidth,
+        height: charHeight
+      });
 
-        // REFINED STABLE LINE SHIFTING
-        // We use p-12 (48px) as vertical padding.
-        const padding = 48; 
-        // We want to keep the current line around the middle or top-middle.
-        // Let's start shifting after the 2nd line.
-        const threshold = padding + (charHeight * 1); 
+      if (charTop !== activeLineTop) {
+        setActiveLineTop(charTop);
+        
+        // STABLE LINE SHIFTING LOGIC
+        // py-12 is 48px
+        const padding = 48;
+        // Keep at least 2 lines visible before starting to scroll.
+        // Once we pass the 2nd line, we shift the container up.
+        // This threshold allows the first 2 lines to be perfectly stable.
+        const threshold = padding + (charHeight * 1.5); 
 
         if (charTop > threshold) {
-          // Stay 1 line below the top padding for better visibility
+          // Calculate how much we need to shift to keep the current line 
+          // at a consistent "focus" position (roughly 1.5 lines down from top)
           setScrollOffset(-(charTop - threshold));
         } else {
           setScrollOffset(0);
         }
       }
-    }, 0);
+    }
     
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-
-    return () => clearTimeout(timeoutId);
-  }, [userInput, words, onAppend]);
+  }, [userInput, words, onAppend, activeLineTop]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
@@ -107,14 +111,11 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
-      {/* Bottom Subtle Fade */}
-      <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-card to-transparent z-30 pointer-events-none" />
-
       {/* Scrollable Container Animated via Motion */}
       <motion.div 
         ref={containerRef}
         animate={{ y: scrollOffset }}
-        transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
+        transition={{ type: "spring", damping: 35, stiffness: 250, mass: 0.5 }}
         className="w-full p-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
       >
         <input
