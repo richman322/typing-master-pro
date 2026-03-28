@@ -46,6 +46,24 @@ const GpaCalculator = () => {
     setSubjects(subjects.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
 
+  // CGPA Methods
+  const addSemester = () => {
+    const nextId = semesters.length + 1;
+    setSemesters([...semesters, { id: Date.now(), name: `Semester ${nextId}`, gpa: 3.5, creditHours: 18 }]);
+  };
+
+  const removeSemester = (id) => {
+    if (semesters.length === 1) {
+      toast.error("Minimum one semester required");
+      return;
+    }
+    setSemesters(semesters.filter(s => s.id !== id));
+  };
+
+  const updateSemester = (id, field, value) => {
+    setSemesters(semesters.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
   const getGpaStats = () => {
     let totalQualityPoints = 0;
     let totalCredits = 0;
