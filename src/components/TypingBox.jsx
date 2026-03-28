@@ -45,13 +45,14 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // DISCRETE LINE SHIFTING LOGIC
-      // We want to start from the first line and scroll only when moving past the second line.
-      const padding = 48; // p-12 is 3rem/48px
-      const lineThreshold = padding + (charHeight * 1.5); // Allow ~2 lines before shifting
+      // REFINED LINE SHIFTING LOGIC
+      // We want to keep the text starting from the top.
+      // paddingTop is 32px (py-8).
+      const paddingTop = 32; 
+      const lineThreshold = paddingTop + (charHeight * 1.5); // Start shifting after ~2nd line
       
       if (charTop > lineThreshold) {
-        // Shift up by one line height at a time to keep the active line visible
+        // Shift up smoothly to keep the active line at the threshold position
         setScrollOffset(-(charTop - lineThreshold));
       } else {
         setScrollOffset(0);
@@ -100,16 +101,15 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card/50 backdrop-blur-sm border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
-      {/* Top and Bottom Fades for better visibility during scroll */}
-      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-card/80 to-transparent z-30 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-card/80 to-transparent z-30 pointer-events-none" />
+      {/* Bottom Fade only - removed top fade to show first line clearly */}
+      <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-card to-transparent z-30 pointer-events-none" />
 
       {/* Scrollable Container Animated via Motion */}
       <motion.div 
         ref={containerRef}
         animate={{ y: scrollOffset }}
         transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
-        className="w-full p-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
+        className="w-full px-12 py-8 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
       >
         <input
           ref={inputRef}
