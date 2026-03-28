@@ -6,18 +6,23 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const audioCtx = useRef(null);
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const [scrollOffset, setScrollOffset] = useState(0);
-  const containerRef = useRef(null);
+  const scrollRef = useRef(null);
   const [activeLineTop, setActiveLineTop] = useState(0);
+  const currentLineRef = useRef(0);
+  const lastOffsetTop = useRef(0);
 
-  // RESET SCROLL POSITION ON INITIAL LOAD
+  // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD
   useEffect(() => {
-    setScrollOffset(0);
-    setActiveLineTop(0);
-    if (containerRef.current) {
-      containerRef.current.scrollTo({
-        top: 0,
-        behavior: 'auto'
-      });
+    const container = scrollRef.current;
+
+    if (container) {
+      setTimeout(() => {
+        container.scrollTop = 0;
+        setScrollOffset(0);
+        setActiveLineTop(0);
+        currentLineRef.current = 0;
+        lastOffsetTop.current = 0;
+      }, 0);
     }
   }, [words]);
 
