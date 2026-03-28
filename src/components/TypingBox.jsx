@@ -11,33 +11,64 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const currentLineRef = useRef(0);
   const lastOffsetTop = useRef(0);
   const prevWordsLengthRef = useRef(words.length);
+  const isInitialMount = useRef(true);
 
-  // 1. Define visual offset based on difficulty
+  // Define difficulty settings
   const isEasy = difficulty === 'easy';
-  const visualOffset = isEasy ? 0 : (difficulty === 'medium' ? 80 : 120);
-  const basePadding = 48;
-  const paddingTop = basePadding + visualOffset;
+  const isMedium = difficulty === 'medium';
+  const isHard = difficulty === 'hard';
+  
+  // Different padding for different difficulties
+  // Easy: Start from top, Medium/Hard: Start with some padding to show cursor at top
+  const getPaddingTop = () => {
+    if (isEasy) return 48;
+    if (isMedium) return 48;
+    return 48; // Keep consistent
+  };
+  
+  const paddingTop = getPaddingTop();
 
-  // REQUIRED FIX: RESET SCROLL POSITION - Only on append, not on initial load
+  // FIX: Set initial scroll offset based on difficulty to show first line
   useEffect(() => {
     const container = scrollRef.current;
     const isAppend = words.length > prevWordsLengthRef.current;
 
-    if (container) {
+    if (container && !isAppend && isInitialMount.current) {
+      // For initial load, set scroll offset to show the first line properly
       setTimeout(() => {
-        if (isAppend) {
-          // Reset only when appending new content
-          container.scrollTop = 0;
+        if (isMedium || isHard) {
+          // For medium/hard, we want the first character to be visible at the top
+          // Set a small negative offset to pull content up slightly
+          const firstChar = scrollRef.current?.querySelector('.char-active');
+          if (firstChar) {
+            const charTop = firstChar.offsetTop;
+            if (charTop > paddingTop) {
+              setScrollOffset(-(charTop - paddingTop));
+            }
+          } else {
+            // If no active char yet, just show from top
+            setScrollOffset(0);
+          }
+        } else {
           setScrollOffset(0);
-          setActiveLineTop(0);
-          currentLineRef.current = 0;
-          lastOffsetTop.current = 0;
         }
-        // On initial load for medium/hard, do nothing here
-      }, 10);
+        setActiveLineTop(0);
+        currentLineRef.current = 0;
+        lastOffsetTop.current = 0;
+        isInitialMount.current = false;
+      }, 150);
+    } else if (isAppend) {
+      // On append, reset scroll to show new content
+      setTimeout(() => {
+        container.scrollTop = 0;
+        setScrollOffset(0);
+        setActiveLineTop(0);
+        currentLineRef.current = 0;
+        lastOffsetTop.current = 0;
+      }, 0);
     }
     prevWordsLengthRef.current = words.length;
-  }, [words]);
+  }, [words, isEasy, isMedium, isHard, paddingTop]);
 
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
@@ -62,7 +93,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     };
   }, []);
 
-  // Updated useLayoutEffect - Critical for Medium/Hard initial positioning
+  // Use useLayoutEffect to measure before the browser paints
   useLayoutEffect(() => {
     const activeChar = scrollRef.current?.querySelector('.char-active');
     
@@ -81,24 +112,35 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       if (charTop !== activeLineTop) {
         setActiveLineTop(charTop);
         
-        // STABLE LINE SHIFTING LOGIC
-        const threshold = isEasy 
-          ? paddingTop + (charHeight * 1.5) 
-          : paddingTop; 
-
-        let newOffset = 0;
-        if (charTop > threshold) {
-          newOffset = -(charTop - threshold);
-        }
+        // IMPROVED LINE SHIFTING LOGIC BASED ON DIFFICULTY
+        let threshold;
         
-        setScrollOffset(newOffset);
+        if (isEasy) {
+          // Easy: Shift when cursor reaches 1.5 lines down
+          threshold = paddingTop + (charHeight * 1.5);
+        } else if (isMedium) {
+          // Medium: Keep cursor in the top third of the viewport
+          threshold = paddingTop + (charHeight * 0.8);
+        } else {
+          // Hard: Keep cursor at the very top for maximum challenge
+          threshold = paddingTop + (charHeight * 0.3);
+        }
+
+        if (charTop > threshold) {
+          // Calculate how much to scroll up
+          const scrollAmount = charTop - threshold;
+          setScrollOffset(-scrollAmount);
+        } else if (charTop < paddingTop && scrollOffset < 0) {
+          // If cursor moves above padding, reset scroll
+          setScrollOffset(0);
+        }
       }
     }
     
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend, activeLineTop, paddingTop, isEasy]);
+  }, [userInput, words, onAppend, activeLineTop, paddingTop, isEasy, isMedium, isHard, scrollOffset]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;

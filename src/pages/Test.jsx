@@ -30,12 +30,18 @@ const Test = () => {
     const list = difficultyData[l][d] || difficultyData.english.medium;
     let initialText = "";
     
+    // Shuffle and pick sentences for all modes to ensure variety
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     
+    // IMPORTANT: Use fewer sentences for medium/hard so they fit in view
     if (d === 'easy') {
       initialText = shuffled.slice(0, 3).join(' ');
+    } else if (d === 'medium') {
+      // Medium: 3 sentences so they're all visible at start
+      initialText = shuffled.slice(0, 3).join(' ');
     } else {
-      initialText = shuffled.slice(0, 10).join(' ');
+      // Hard: 2 sentences for maximum visibility
+      initialText = shuffled.slice(0, 2).join(' ');
     }
     
     setTargetWords(initialText);
@@ -45,11 +51,14 @@ const Test = () => {
     const list = difficultyData[lang][difficulty];
     let moreText = "";
     
+    // Pick random sentences when appending
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     if (difficulty === 'easy') {
       moreText = shuffled.slice(0, 2).join(' ');
+    } else if (difficulty === 'medium') {
+      moreText = shuffled.slice(0, 2).join(' ');
     } else {
-      moreText = shuffled.slice(0, 5).join(' ');
+      moreText = shuffled.slice(0, 1).join(' ');
     }
     setTargetWords(prev => prev + ' ' + moreText);
   }, [lang, difficulty]);
@@ -66,6 +75,7 @@ const Test = () => {
     setShowModal(false);
     startTime.current = null;
     setIsActive(false);
+    // Explicitly call with new values
     generateInitialContent(selectedLang, selectedDifficulty);
   };
 
@@ -181,6 +191,8 @@ const Test = () => {
           }}
           onAppend={appendContent}
           difficulty={difficulty}
+          isRTL={lang !== 'english'}
+          lang={lang}
           soundEnabled={soundEnabled}
         />
       </motion.div>
