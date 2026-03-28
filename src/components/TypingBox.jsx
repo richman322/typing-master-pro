@@ -78,8 +78,11 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         setActiveLineTop(charTop);
         
         // STABLE LINE SHIFTING LOGIC
-        // We use the same threshold logic but it now accounts for the dynamic paddingTop
-        const threshold = paddingTop + (charHeight * 1.5); 
+        // py-12 is 48px. We adjust the threshold to wait longer for Medium/Hard
+        // so the shifter doesn't trigger 3-4 lines too early.
+        const threshold = isEasy 
+          ? paddingTop + (charHeight * 1.5) 
+          : paddingTop + (charHeight * 4.5); 
 
         if (charTop > threshold) {
           setScrollOffset(-(charTop - threshold));
