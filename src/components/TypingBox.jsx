@@ -60,6 +60,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     } else if (isAppend) {
       // On append, reset scroll to show new content
       setTimeout(() => {
+        // Reset scroll for BOTH initial load AND append
         container.scrollTop = 0;
         setScrollOffset(0);
         setActiveLineTop(0);
