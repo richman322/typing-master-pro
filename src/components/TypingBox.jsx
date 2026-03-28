@@ -10,6 +10,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const [activeLineTop, setActiveLineTop] = useState(0);
   const currentLineRef = useRef(0);
   const lastOffsetTop = useRef(0);
+  const prevWordsLengthRef = useRef(words.length);
 
   // 1. Define visual offset based on difficulty
   // Easy: 48px (original)
@@ -18,9 +19,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const isEasy = difficulty === 'easy';
   const visualOffset = isEasy ? 0 : (difficulty === 'medium' ? 80 : 120);
   const basePadding = 48;
-  const currentLineRef = useRef(0);
-  const lastOffsetTop = useRef(0);
-  const prevWordsLengthRef = useRef(words.length);
+  const paddingTop = basePadding + visualOffset;
 
   // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD OR APPEND
   useEffect(() => {
@@ -41,6 +40,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     }
     prevWordsLengthRef.current = words.length;
   }, [words]);
+
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
     window.addEventListener('focus', focus);
@@ -101,7 +101,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend, activeLineTop, paddingTop]);
+  }, [userInput, words, onAppend, activeLineTop, paddingTop, isEasy]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
