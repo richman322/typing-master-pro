@@ -63,7 +63,6 @@ const GpaCalculator = () => {
     subjects.forEach(s => {
       const credits = parseFloat(s.creditHours) || 0;
       const qp = parseFloat(s.qualityPoints) || 0;
-      // Formula strictly: Sum of all Q.Ps / Sum of all C.H
       totalQualityPoints += qp;
       totalCredits += credits;
     });
@@ -159,9 +158,9 @@ const GpaCalculator = () => {
 
                 <div className="space-y-4">
                   <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <div className="col-span-6">Subject Name</div>
+                    <div className="col-span-5">Subject Name</div>
                     <div className="col-span-3 text-center">Credit Hours</div>
-                    <div className="col-span-2 text-center">Quality Points</div>
+                    <div className="col-span-3 text-center">Quality Points</div>
                     <div className="col-span-1"></div>
                   </div>
 
@@ -173,7 +172,7 @@ const GpaCalculator = () => {
                       key={s.id} 
                       className="grid grid-cols-12 gap-3 md:gap-4 items-center p-3 md:p-0 rounded-2xl bg-secondary/30 md:bg-transparent border border-border/50 md:border-none"
                     >
-                      <div className="col-span-12 md:col-span-6">
+                      <div className="col-span-12 md:col-span-5">
                         <input 
                           type="text" 
                           placeholder="e.g. Computer Science"
@@ -193,7 +192,7 @@ const GpaCalculator = () => {
                           onChange={(e) => updateSubject(s.id, 'creditHours', e.target.value)}
                         />
                       </div>
-                      <div className="col-span-4 md:col-span-2 flex flex-col gap-1">
+                      <div className="col-span-4 md:col-span-3 flex flex-col gap-1">
                         <label className="md:hidden text-[10px] font-black uppercase text-muted-foreground ml-1">Quality Points</label>
                         <input 
                           type="number" 

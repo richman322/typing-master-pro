@@ -45,17 +45,16 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // CENTERED LINE SHIFTING LOGIC
-      // Viewport height is ~300px. We want to center the active line.
-      // Offset = (Viewport Height / 2) - charTop - (charHeight / 2)
-      const viewportHeight = 300; 
-      const targetOffset = (viewportHeight / 2) - charTop - (charHeight / 2);
+      // DISCRETE LINE SHIFTING LOGIC
+      // We want to start from the first line and scroll only when moving past the second line.
+      const padding = 48; // p-12 is 3rem/48px
+      const lineThreshold = padding + (charHeight * 1.5); // Allow ~2 lines before shifting
       
-      // If the offset is positive (we are at the start), don't scroll past 0
-      if (targetOffset > 0) {
-        setScrollOffset(0);
+      if (charTop > lineThreshold) {
+        // Shift up by one line height at a time to keep the active line visible
+        setScrollOffset(-(charTop - lineThreshold));
       } else {
-        setScrollOffset(targetOffset);
+        setScrollOffset(0);
       }
     }
     
@@ -101,6 +100,10 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card/50 backdrop-blur-sm border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
+      {/* Top and Bottom Fades for better visibility during scroll */}
+      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-card/80 to-transparent z-30 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-card/80 to-transparent z-30 pointer-events-none" />
+
       {/* Scrollable Container Animated via Motion */}
       <motion.div 
         ref={containerRef}
