@@ -29,21 +29,18 @@ const Test = () => {
   const generateInitialContent = useCallback((l = lang, d = difficulty) => {
     const list = difficultyData[l][d] || difficultyData.english.medium;
     let initialText = "";
-    
-    // Shuffle and pick sentences for all modes to ensure variety
+
     const shuffled = [...list].sort(() => 0.5 - Math.random());
-    
-    // IMPORTANT: Use fewer sentences for medium/hard so they fit in view
+
+    // CHANGE THESE NUMBERS:
     if (d === 'easy') {
       initialText = shuffled.slice(0, 3).join(' ');
     } else if (d === 'medium') {
-      // Medium: 3 sentences so they're all visible at start
-      initialText = shuffled.slice(0, 3).join(' ');
+      initialText = shuffled.slice(0, 3).join(' '); // Changed from 5 to 3
     } else {
-      // Hard: 2 sentences for maximum visibility
-      initialText = shuffled.slice(0, 2).join(' ');
+      initialText = shuffled.slice(0, 3).join(' '); // Changed from 10 to 3
     }
-    
+
     setTargetWords(initialText);
   }, [lang, difficulty]);
 
