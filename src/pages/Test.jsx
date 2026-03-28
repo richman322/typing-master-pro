@@ -33,11 +33,15 @@ const Test = () => {
     // Shuffle and pick sentences for all modes to ensure variety
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     
-    // Shifting logic: Easy mode starts at top, Medium/Hard start with more content
+    // Adjust initial content length based on difficulty
     if (d === 'easy') {
       initialText = shuffled.slice(0, 3).join(' ');
+    } else if (d === 'medium') {
+      // Medium: 5 sentences to start (enough to see but not overwhelming)
+      initialText = shuffled.slice(0, 5).join(' ');
     } else {
-      initialText = shuffled.slice(0, 10).join(' ');
+      // Hard: 8 sentences to start (challenging)
+      initialText = shuffled.slice(0, 8).join(' ');
     }
     
     setTargetWords(initialText);
@@ -51,8 +55,10 @@ const Test = () => {
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     if (difficulty === 'easy') {
       moreText = shuffled.slice(0, 2).join(' ');
+    } else if (difficulty === 'medium') {
+      moreText = shuffled.slice(0, 3).join(' ');
     } else {
-      moreText = shuffled.slice(0, 5).join(' ');
+      moreText = shuffled.slice(0, 4).join(' ');
     }
     setTargetWords(prev => prev + ' ' + moreText);
   }, [lang, difficulty]);
