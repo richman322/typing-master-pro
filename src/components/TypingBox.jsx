@@ -11,9 +11,14 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const currentLineRef = useRef(0);
   const lastOffsetTop = useRef(0);
 
-  // Dynamic padding based on difficulty to shift visible starting position
+  // 1. Define visual offset based on difficulty
+  // Easy: 48px (original)
+  // Medium: 48px + 2 lines (~120px)
+  // Hard: 48px + 3 lines (~180px)
   const isEasy = difficulty === 'easy';
-  const paddingTop = isEasy ? 48 : 140; // Shift downward for Medium/Hard
+  const visualOffset = isEasy ? 0 : (difficulty === 'medium' ? 80 : 120);
+  const basePadding = 48;
+  const paddingTop = basePadding + visualOffset;
 
   // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD
   useEffect(() => {
@@ -73,6 +78,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         setActiveLineTop(charTop);
         
         // STABLE LINE SHIFTING LOGIC
+        // We use the same threshold logic but it now accounts for the dynamic paddingTop
         const threshold = paddingTop + (charHeight * 1.5); 
 
         if (charTop > threshold) {
