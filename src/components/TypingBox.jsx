@@ -12,38 +12,32 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const lastOffsetTop = useRef(0);
   const prevWordsLengthRef = useRef(words.length);
 
-  // Define difficulty settings
+  // 1. Define visual offset based on difficulty
   const isEasy = difficulty === 'easy';
-  const isMedium = difficulty === 'medium';
+  const visualOffset = isEasy ? 0 : (difficulty === 'medium' ? 80 : 120);
   const basePadding = 48;
-  const paddingTop = basePadding;
+  const paddingTop = basePadding + visualOffset;
 
-  // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD OR APPEND
+  // REQUIRED FIX: RESET SCROLL POSITION - Only on append, not on initial load
   useEffect(() => {
     const container = scrollRef.current;
     const isAppend = words.length > prevWordsLengthRef.current;
 
-    if (container && !isAppend) {
-      // For initial load, set scroll position based on difficulty
+    if (container) {
       setTimeout(() => {
-        container.scrollTop = 0;
-        setScrollOffset(0);
-        setActiveLineTop(0);
-        currentLineRef.current = 0;
-        lastOffsetTop.current = 0;
-      }, 100);
-    } else if (isAppend) {
-      // On append, reset scroll to top
-      setTimeout(() => {
-        container.scrollTop = 0;
-        setScrollOffset(0);
-        setActiveLineTop(0);
-        currentLineRef.current = 0;
-        lastOffsetTop.current = 0;
-      }, 0);
+        if (isAppend) {
+          // Reset only when appending new content
+          container.scrollTop = 0;
+          setScrollOffset(0);
+          setActiveLineTop(0);
+          currentLineRef.current = 0;
+          lastOffsetTop.current = 0;
+        }
+        // On initial load for medium/hard, do nothing here
+      }, 10);
     }
     prevWordsLengthRef.current = words.length;
-  }, [words, isEasy]);
+  }, [words]);
 
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
@@ -68,7 +62,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     };
   }, []);
 
-  // Use useLayoutEffect to measure before the browser paints
+  // Updated useLayoutEffect - Critical for Medium/Hard initial positioning
   useLayoutEffect(() => {
     const activeChar = scrollRef.current?.querySelector('.char-active');
     
@@ -87,35 +81,24 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       if (charTop !== activeLineTop) {
         setActiveLineTop(charTop);
         
-        // IMPROVED LINE SHIFTING LOGIC
-        let threshold;
-        
-        if (isEasy) {
-          // Easy: Shift when cursor reaches 1.5 lines down
-          threshold = paddingTop + (charHeight * 1.5);
-        } else if (isMedium) {
-          // Medium: Shift when cursor reaches 0.5 lines from top (keep it centered)
-          threshold = paddingTop + (charHeight * 0.5);
-        } else {
-          // Hard: Shift immediately when cursor moves past padding (strict)
-          threshold = paddingTop;
-        }
+        // STABLE LINE SHIFTING LOGIC
+        const threshold = isEasy 
+          ? paddingTop + (charHeight * 1.5) 
+          : paddingTop; 
 
+        let newOffset = 0;
         if (charTop > threshold) {
-          // Calculate how much to scroll up
-          const scrollAmount = charTop - threshold;
-          setScrollOffset(-scrollAmount);
-        } else if (charTop < paddingTop && scrollOffset < 0) {
-          // If cursor moves above padding, reset scroll
-          setScrollOffset(0);
+          newOffset = -(charTop - threshold);
         }
+        
+        setScrollOffset(newOffset);
       }
     }
     
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend, activeLineTop, paddingTop, isEasy, isMedium, scrollOffset]);
+  }, [userInput, words, onAppend, activeLineTop, paddingTop, isEasy]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
