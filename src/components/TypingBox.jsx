@@ -45,16 +45,17 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // DISCRETE LINE SHIFTING LOGIC
-      // We want to keep the current line centered or at a specific position.
-      // 350px is the viewport height. Let's aim to keep the active line at the top.
-      const padding = 48; // p-12 is 3rem/48px
-      const targetOffset = charTop - padding;
+      // CENTERED LINE SHIFTING LOGIC
+      // Viewport height is ~300px. We want to center the active line.
+      // Offset = (Viewport Height / 2) - charTop - (charHeight / 2)
+      const viewportHeight = 300; 
+      const targetOffset = (viewportHeight / 2) - charTop - (charHeight / 2);
       
-      if (targetOffset >= 0) {
-        setScrollOffset(-targetOffset);
-      } else {
+      // If the offset is positive (we are at the start), don't scroll past 0
+      if (targetOffset > 0) {
         setScrollOffset(0);
+      } else {
+        setScrollOffset(targetOffset);
       }
     }
     

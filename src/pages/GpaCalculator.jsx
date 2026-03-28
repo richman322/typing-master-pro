@@ -12,8 +12,8 @@ const GpaCalculator = () => {
   
   // GPA State
   const [subjects, setSubjects] = useState([
-    { id: 1, name: '', creditHours: 3, qualityPoints: 4.0 },
-    { id: 2, name: '', creditHours: 3, qualityPoints: 3.0 }
+    { id: 1, name: '', creditHours: 3, qualityPoints: 12.0 },
+    { id: 2, name: '', creditHours: 3, qualityPoints: 9.0 }
   ]);
 
   // CGPA State
@@ -24,7 +24,7 @@ const GpaCalculator = () => {
 
   // GPA Methods
   const addSubject = () => {
-    setSubjects([...subjects, { id: Date.now(), name: '', creditHours: 3, qualityPoints: 4.0 }]);
+    setSubjects([...subjects, { id: Date.now(), name: '', creditHours: 3, qualityPoints: 12.0 }]);
   };
 
   const removeSubject = (id) => {
@@ -63,8 +63,8 @@ const GpaCalculator = () => {
     subjects.forEach(s => {
       const credits = parseFloat(s.creditHours) || 0;
       const qp = parseFloat(s.qualityPoints) || 0;
-      // Fixed: Total Quality Points should be QP * Credits
-      totalQualityPoints += qp * credits;
+      // Formula strictly: Sum of all Q.Ps / Sum of all C.H
+      totalQualityPoints += qp;
       totalCredits += credits;
     });
     const gpa = totalCredits > 0 ? (totalQualityPoints / totalCredits).toFixed(2) : '0.00';
@@ -76,7 +76,6 @@ const GpaCalculator = () => {
     semesters.forEach(s => {
       sumGpa += parseFloat(s.gpa) || 0;
     });
-    // Formula: sum of all semesters gpa / no of semesters
     const cgpa = semesters.length > 0 ? (sumGpa / semesters.length).toFixed(2) : '0.00';
     return { cgpa, count: semesters.length };
   };
@@ -151,7 +150,7 @@ const GpaCalculator = () => {
                     Subject Entries
                   </h3>
                   <button 
-                    onClick={() => setSubjects([{ id: Date.now(), name: '', creditHours: 3, qualityPoints: 4.0 }])}
+                    onClick={() => setSubjects([{ id: Date.now(), name: '', creditHours: 3, qualityPoints: 12.0 }])}
                     className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-2"
                   >
                     <RefreshCcw size={14} /> Reset
@@ -195,12 +194,11 @@ const GpaCalculator = () => {
                         />
                       </div>
                       <div className="col-span-4 md:col-span-2 flex flex-col gap-1">
-                        <label className="md:hidden text-[10px] font-black uppercase text-muted-foreground ml-1">Points</label>
+                        <label className="md:hidden text-[10px] font-black uppercase text-muted-foreground ml-1">Quality Points</label>
                         <input 
                           type="number" 
                           step="0.01"
                           min="0"
-                          max="4"
                           placeholder="0.00"
                           className="input-minimal w-full text-center text-sm font-bold bg-background"
                           value={s.qualityPoints}
@@ -367,11 +365,11 @@ const GpaCalculator = () => {
             <ul className="text-xs text-muted-foreground space-y-3 font-medium">
               <li className="flex gap-2">
                 <span className="text-purple-500">•</span>
-                Minimum passing GPA is 1.0 per subject.
+                Formula: Sum of Quality Points / Sum of Credits
               </li>
               <li className="flex gap-2">
                 <span className="text-purple-500">•</span>
-                A grade is equivalent to 4.0 points.
+                A Grade is equivalent to 4.0 Grade points.
               </li>
               <li className="flex gap-2">
                 <span className="text-purple-500">•</span>
