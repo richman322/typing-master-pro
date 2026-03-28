@@ -14,7 +14,7 @@ const StartModal = ({ onStart, onCancel }) => {
     { label: '5m', value: 300 }
   ];
   const difficulties = ['easy', 'medium', 'hard'];
-  const languages = ['english', 'urdu', 'arabic'];
+  const languages = ['english'];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-background/80 backdrop-blur-xl overflow-y-auto">

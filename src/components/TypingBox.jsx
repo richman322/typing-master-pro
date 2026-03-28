@@ -1,12 +1,12 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled, isRTL, lang }) => {
+const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled }) => {
   const inputRef = useRef(null);
-  const scrollRef = useRef(null);
   const audioCtx = useRef(null);
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
-  const lastOffsetTop = useRef(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const focus = () => inputRef.current?.focus();
@@ -32,10 +32,9 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   }, []);
 
   useEffect(() => {
-    const activeChar = scrollRef.current?.querySelector('.cursor-trigger');
-    const container = scrollRef.current;
+    const activeChar = containerRef.current?.querySelector('.char-active');
     
-    if (activeChar && container) {
+    if (activeChar) {
       const charTop = activeChar.offsetTop;
       const charHeight = activeChar.offsetHeight || 40;
       
@@ -46,22 +45,16 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // VIRTUAL WINDOW SCROLLING
-      // We want the current line to stay at a fixed relative position.
-      if (charTop !== lastOffsetTop.current) {
-        const container = scrollRef.current;
-
-        // Detect line change ONLY
-        if (charTop > lastOffsetTop.current) {
-          const lineHeight = activeChar.offsetHeight + 8; // adjust gap if needed
-
-          container.scrollTo({
-            top: container.scrollTop + lineHeight,
-            behavior: 'smooth'
-          });
-        }
-
-        lastOffsetTop.current = charTop;
+      // DISCRETE LINE SHIFTING LOGIC
+      // We want to keep the current line centered or at a specific position.
+      // 350px is the viewport height. Let's aim to keep the active line at the top.
+      const padding = 48; // p-12 is 3rem/48px
+      const targetOffset = charTop - padding;
+      
+      if (targetOffset >= 0) {
+        setScrollOffset(-targetOffset);
+      } else {
+        setScrollOffset(0);
       }
     }
     
@@ -97,26 +90,22 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   };
 
   const getCharStatus = (index) => {
-    if (index === userInput.length) return 'cursor-trigger char-active';
+    if (index === userInput.length) return 'char-active';
     if (index > userInput.length) return 'char-untyped';
     return userInput[index] === words[index] ? 'char-correct' : 'char-wrong';
   };
 
-  const getFontClass = () => {
-    if (lang === 'urdu') return 'urdu-font';
-    if (lang === 'arabic') return 'arabic-font';
-    return 'typing-font font-medium';
-  };
-
   return (
     <div 
-      className={`phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] flex items-center justify-center bg-card/50 backdrop-blur-sm border-border/50`}
-      dir={isRTL ? 'rtl' : 'ltr'}
+      className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[180px] md:h-[220px] bg-card/50 backdrop-blur-sm border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
-      <div 
-        ref={scrollRef}
-        className={`w-full h-full p-8 md:p-12 flex flex-wrap gap-x-[0.2em] gap-y-4 md:gap-y-6 text-2xl md:text-4xl tracking-tight leading-relaxed scroll-smooth overflow-y-hidden relative ${getFontClass()} ${isRTL ? 'text-right' : 'text-left'}`}
+      {/* Scrollable Container Animated via Motion */}
+      <motion.div 
+        ref={containerRef}
+        animate={{ y: scrollOffset }}
+        transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
+        className="w-full p-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
       >
         <input
           ref={inputRef}
@@ -135,12 +124,12 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         {/* Dynamic Cursor */}
         <motion.div 
           animate={{ 
-            x: isRTL ? -cursorPos.left : cursorPos.left, 
+            x: cursorPos.left, 
             y: cursorPos.top,
             height: cursorPos.height || 40
           }}
           transition={{ type: "spring", damping: 35, stiffness: 450, mass: 0.4 }}
-          className={`absolute top-0 w-[2px] bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.8)] z-20 ${isRTL ? 'right-0' : 'left-0'}`}
+          className="absolute top-0 left-0 w-[3px] bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.8)] z-20"
           style={{ 
             display: userInput.length >= words.length ? 'none' : 'block',
             animation: 'blink 1s step-end infinite'
@@ -155,14 +144,14 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
             {char === ' ' ? '\u00A0' : char}
           </span>
         ))}
-      </div>
+      </motion.div>
 
       {/* Focus Overlay */}
       <AnimatePresence>
-        <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-focus-within:pointer-events-none group-focus-within:opacity-0 transition-all duration-300 pointer-events-none">
-           <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-              <span className="text-sm font-black uppercase tracking-[0.4em] text-indigo-500">Click to Focus</span>
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-focus-within:pointer-events-none group-focus-within:opacity-0 transition-all duration-500 pointer-events-none z-50">
+           <div className="flex flex-col items-center gap-6">
+              <div className="w-14 h-14 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin" />
+              <span className="text-sm font-black uppercase tracking-[0.5em] text-indigo-500 animate-pulse">Click to Focus</span>
            </div>
         </div>
       </AnimatePresence>
@@ -172,10 +161,10 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
           from, to { opacity: 1; }
           50% { opacity: 0; }
         }
-        .char-correct { color: #10b981 !important; }
-        .char-wrong { color: #f43f5e !important; background: rgba(244, 63, 94, 0.1); border-radius: 2px; }
-        .char-untyped { color: rgba(156, 163, 175, 0.3); }
-        .char-active { color: #6366f1 !important; background: rgba(99, 102, 241, 0.1); border-radius: 4px; }
+        .char-correct { color: #10b981 !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .char-wrong { color: #f43f5e !important; background: rgba(244, 63, 94, 0.15); border-radius: 4px; }
+        .char-untyped { color: rgba(156, 163, 175, 0.25); }
+        .char-active { color: #6366f1 !important; }
       `}</style>
     </div>
   );

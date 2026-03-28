@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -79,16 +79,6 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
-.urdu-font {
-  font-family: 'Noto Nastaliq Urdu', serif;
-  line-height: 2.5;
-}
-
-.arabic-font {
-  font-family: 'Noto Naskh Arabic', serif;
-  line-height: 2;
-}
-
 .phantom-viewport {
   @apply relative overflow-hidden rounded-3xl bg-card border border-border shadow-2xl transition-all duration-500;
   width: 100%;
@@ -99,10 +89,6 @@
 .char-correct { @apply text-emerald-500 transition-colors duration-200; }
 .char-wrong { @apply text-rose-500 bg-rose-500/10 rounded-sm transition-colors duration-200; }
 .char-untyped { @apply text-muted-foreground/30; }
-
-.cursor-smooth {
-  @apply absolute bottom-0 left-0 w-[2px] h-[1.2em] bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)];
-}
 
 /* GPA Calculator Styles */
 .input-minimal {
