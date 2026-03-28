@@ -33,8 +33,12 @@ const Test = () => {
     // Shuffle and pick sentences for all modes to ensure variety
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     
-    // Standardize initial sentence count for all modes to ensure consistent top-line visibility
-    initialText = shuffled.slice(0, 3).join(' ');
+    // Shifting logic: Easy mode starts at top, Medium/Hard start with more content
+    if (d === 'easy') {
+      initialText = shuffled.slice(0, 3).join(' ');
+    } else {
+      initialText = shuffled.slice(0, 10).join(' ');
+    }
     
     setTargetWords(initialText);
   }, [lang, difficulty]);
@@ -181,6 +185,7 @@ const Test = () => {
             startTime.current = Date.now();
           }}
           onAppend={appendContent}
+          difficulty={difficulty}
           isRTL={lang !== 'english'}
           lang={lang}
           soundEnabled={soundEnabled}

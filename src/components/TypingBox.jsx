@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled }) => {
+const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled, difficulty }) => {
   const inputRef = useRef(null);
   const audioCtx = useRef(null);
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
@@ -10,6 +10,10 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const [activeLineTop, setActiveLineTop] = useState(0);
   const currentLineRef = useRef(0);
   const lastOffsetTop = useRef(0);
+
+  // Dynamic padding based on difficulty to shift visible starting position
+  const isEasy = difficulty === 'easy';
+  const paddingTop = isEasy ? 48 : 140; // Shift downward for Medium/Hard
 
   // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD
   useEffect(() => {
@@ -69,8 +73,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         setActiveLineTop(charTop);
         
         // STABLE LINE SHIFTING LOGIC
-        const padding = 48;
-        const threshold = padding + (charHeight * 1.5); 
+        const threshold = paddingTop + (charHeight * 1.5); 
 
         if (charTop > threshold) {
           setScrollOffset(-(charTop - threshold));
@@ -83,7 +86,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend, activeLineTop]);
+  }, [userInput, words, onAppend, activeLineTop, paddingTop]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
@@ -127,7 +130,8 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         ref={scrollRef}
         animate={{ y: scrollOffset }}
         transition={{ type: "spring", damping: 35, stiffness: 250, mass: 0.5 }}
-        className="w-full p-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
+        className="w-full px-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
+        style={{ paddingTop: `${paddingTop}px`, paddingBottom: '48px' }}
       >
         <input
           ref={inputRef}
