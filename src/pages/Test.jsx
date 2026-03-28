@@ -33,13 +33,9 @@ const Test = () => {
     // Shuffle and pick sentences for all modes to ensure variety
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     
-    if (d === 'easy') {
-      // For Easy mode, pick 3-4 sentences
-      initialText = shuffled.slice(0, 3).join(' ');
-    } else {
-      // For Medium/Hard, pick more content
-      initialText = shuffled.slice(0, 10).join(' ');
-    }
+    // Standardize initial sentence count for all modes to ensure consistent top-line visibility
+    initialText = shuffled.slice(0, 3).join(' ');
+    
     setTargetWords(initialText);
   }, [lang, difficulty]);
 
