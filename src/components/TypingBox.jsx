@@ -22,23 +22,14 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD OR APPEND
   useEffect(() => {
     const container = scrollRef.current;
-    const isAppend = words.length > prevWordsLengthRef.current;
-
     if (container) {
-      setTimeout(() => {
-        if (isAppend) {
-          // Only reset on append, NOT on initial load
-          container.scrollTop = 0;
-          setScrollOffset(0);
-          setActiveLineTop(0);
-          currentLineRef.current = 0;
-          lastOffsetTop.current = 0;
-        }
-        // For initial load (especially medium/hard), do nothing here
-        // Let useLayoutEffect handle the correct initial scrollOffset
-      }, 0);
+      // Reset scroll to top whenever words change (initial load or new difficulty)
+      container.scrollTop = 0;
+      setScrollOffset(0);
+      setActiveLineTop(0);
+      currentLineRef.current = 0;
+      lastOffsetTop.current = 0;
     }
-    prevWordsLengthRef.current = words.length;
   }, [words]);
 
   useEffect(() => {
