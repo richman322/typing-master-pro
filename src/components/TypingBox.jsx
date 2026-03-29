@@ -9,11 +9,11 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const scrollRef = useRef(null);
   const [activeLineTop, setActiveLineTop] = useState(0);
   const currentLineRef = useRef(0);
-  const [hasStarted, setHasStarted] = useState(false); // ✅ new state
+  const [hasStarted, setHasStarted] = useState(false); // typing start flag
 
   const paddingTop = 48; // consistent padding for all modes
 
-  // Reset scroll to top whenever words change
+  // Reset scroll & typing flag whenever words change
   useEffect(() => {
     const container = scrollRef.current;
     if (container) {
@@ -21,7 +21,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       setScrollOffset(0);
       setActiveLineTop(0);
       currentLineRef.current = 0;
-      setHasStarted(false); // reset start flag on new text
+      setHasStarted(false);
     }
   }, [words]);
 
@@ -65,15 +65,13 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       setActiveLineTop(charTop);
 
       const threshold = paddingTop;
-      // ✅ only scroll after typing has started
+      // Scroll only after typing starts
       if (hasStarted) {
         if (charTop > threshold) {
           setScrollOffset(-(charTop - threshold));
-        } else {
-          setScrollOffset(0);
         }
       } else {
-        setScrollOffset(0); // before typing starts, always top
+        setScrollOffset(0);
       }
     }
 
@@ -103,7 +101,6 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     const value = e.target.value;
     if (value.length - userInput.length > 15) return;
 
-    // ✅ mark typing started
     if (!hasStarted && value.length === 1) {
       onStart();
       setHasStarted(true);
@@ -121,7 +118,8 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   return (
     <div 
-      className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card border-border/50"
+      className="phantom-viewport mx-auto group cursor-text relative bg-card border-border/50"
+      style={{ minHeight: '250px', maxHeight: 'none', overflowY: 'visible' }}
       onClick={() => inputRef.current?.focus()}
     >
       <motion.div 

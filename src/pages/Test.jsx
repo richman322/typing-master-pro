@@ -29,17 +29,13 @@ const Test = () => {
   const generateInitialContent = useCallback((l = lang, d = difficulty) => {
     const list = difficultyData[l][d] || difficultyData.english.medium;
     let initialText = "";
-    
-    // Shuffle and pick sentences for all modes to ensure variety
+
+    // Shuffle sentences for variety
     const shuffled = [...list].sort(() => 0.5 - Math.random());
-    
-    // Shifting logic: Easy mode starts at top, Medium/Hard start with more content
-    if (d === 'easy') {
-      initialText = shuffled.slice(0, 3).join(' ');
-    } else {
-      initialText = shuffled.slice(0, 10).join(' ');
-    }
-    
+
+    // ✅ All modes pick same number of initial sentences for consistent display
+    initialText = shuffled.slice(0, 3).join(' ');
+
     setTargetWords(initialText);
   }, [lang, difficulty]);
 
@@ -49,11 +45,7 @@ const Test = () => {
     
     // Pick random sentences when appending
     const shuffled = [...list].sort(() => 0.5 - Math.random());
-    if (difficulty === 'easy') {
-      moreText = shuffled.slice(0, 2).join(' ');
-    } else {
-      moreText = shuffled.slice(0, 5).join(' ');
-    }
+    moreText = shuffled.slice(0, 3).join(' '); // consistent with initial load
     setTargetWords(prev => prev + ' ' + moreText);
   }, [lang, difficulty]);
 
@@ -69,8 +61,6 @@ const Test = () => {
     setShowModal(false);
     startTime.current = null;
     setIsActive(false);
-    // Explicitly call with new values to avoid stale closure if needed, 
-    // though generateInitialContent is in dependency array of useEffect above
     generateInitialContent(selectedLang, selectedDifficulty);
   };
 
@@ -186,8 +176,6 @@ const Test = () => {
           }}
           onAppend={appendContent}
           difficulty={difficulty}
-          isRTL={lang !== 'english'}
-          lang={lang}
           soundEnabled={soundEnabled}
         />
       </motion.div>
@@ -204,7 +192,6 @@ const Test = () => {
          </div>
       </div>
 
-      {/* Ads Placeholder */}
       <div className="mt-8 p-6 border border-dashed border-border rounded-3xl flex items-center justify-center bg-secondary/20 grayscale opacity-50">
         <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Advertisement Area</span>
       </div>
