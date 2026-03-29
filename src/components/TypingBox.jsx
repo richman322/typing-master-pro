@@ -9,6 +9,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const scrollRef = useRef(null);
   const [activeLineTop, setActiveLineTop] = useState(0);
   const currentLineRef = useRef(0);
+  const [hasStarted, setHasStarted] = useState(false); // ✅ new state
 
   const paddingTop = 48; // consistent padding for all modes
 
@@ -20,6 +21,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       setScrollOffset(0);
       setActiveLineTop(0);
       currentLineRef.current = 0;
+      setHasStarted(false); // reset start flag on new text
     }
   }, [words]);
 
@@ -62,19 +64,23 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
       setActiveLineTop(charTop);
 
-      // Always start from top, no extra scroll
       const threshold = paddingTop;
-      if (charTop > threshold) {
-        setScrollOffset(-(charTop - threshold));
+      // ✅ only scroll after typing has started
+      if (hasStarted) {
+        if (charTop > threshold) {
+          setScrollOffset(-(charTop - threshold));
+        } else {
+          setScrollOffset(0);
+        }
       } else {
-        setScrollOffset(0);
+        setScrollOffset(0); // before typing starts, always top
       }
     }
 
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend]);
+  }, [userInput, words, onAppend, hasStarted]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
@@ -96,7 +102,13 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const handleChange = (e) => {
     const value = e.target.value;
     if (value.length - userInput.length > 15) return;
-    if (userInput.length === 0 && value.length === 1) onStart();
+
+    // ✅ mark typing started
+    if (!hasStarted && value.length === 1) {
+      onStart();
+      setHasStarted(true);
+    }
+
     if (value.length > userInput.length) playClick();
     setUserInput(value);
   };
