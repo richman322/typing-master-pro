@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled, difficulty }) => {
+const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEnabled }) => {
   const inputRef = useRef(null);
   const audioCtx = useRef(null);
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
@@ -9,26 +9,17 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const scrollRef = useRef(null);
   const [activeLineTop, setActiveLineTop] = useState(0);
   const currentLineRef = useRef(0);
-  const lastOffsetTop = useRef(0);
-  const prevWordsLengthRef = useRef(words.length);
 
-  const isEasy = difficulty === 'easy';
-  const isMedium = difficulty === 'medium';
-  const isHard = difficulty === 'hard';
+  const paddingTop = 48; // consistent padding for all modes
 
-  // Force all modes to start from top
-  const paddingTop = 48; // consistent top padding for all modes
-
-  // REQUIRED FIX: RESET SCROLL POSITION ON INITIAL LOAD OR APPEND
+  // Reset scroll to top whenever words change
   useEffect(() => {
     const container = scrollRef.current;
     if (container) {
-      // Reset scroll to top whenever words change (initial load or new difficulty)
       container.scrollTop = 0;
       setScrollOffset(0);
       setActiveLineTop(0);
       currentLineRef.current = 0;
-      lastOffsetTop.current = 0;
     }
   }, [words]);
 
@@ -37,7 +28,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     window.addEventListener('focus', focus);
     window.addEventListener('click', focus);
     window.addEventListener('keydown', focus);
-    
+
     const initAudio = () => {
       if (!audioCtx.current) {
         audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -55,15 +46,13 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     };
   }, []);
 
-  // Use useLayoutEffect to measure before the browser paints
   useLayoutEffect(() => {
     const activeChar = scrollRef.current?.querySelector('.char-active');
-    
     if (activeChar) {
       const charTop = activeChar.offsetTop;
       const charHeight = activeChar.offsetHeight || 40;
       const charLeft = activeChar.offsetLeft;
-      
+
       setCursorPos({
         top: charTop,
         left: charLeft,
@@ -71,26 +60,21 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      if (charTop !== activeLineTop) {
-        setActiveLineTop(charTop);
-        
-        // STABLE LINE SHIFTING LOGIC
-        // Easy: Wait for 1.5 lines before shifting (original behavior)
-        // Medium/Hard: Start shifting immediately to keep line at the starting focus point
-        const threshold = paddingTop; // always start from top for all modes
+      setActiveLineTop(charTop);
 
-        if (charTop > threshold) {
-          setScrollOffset(-(charTop - threshold));
-        } else {
-          setScrollOffset(0);
-        }
+      // Always start from top, no extra scroll
+      const threshold = paddingTop;
+      if (charTop > threshold) {
+        setScrollOffset(-(charTop - threshold));
+      } else {
+        setScrollOffset(0);
       }
     }
-    
+
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend, activeLineTop, paddingTop, isEasy]);
+  }, [userInput, words, onAppend]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
@@ -111,8 +95,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   const handleChange = (e) => {
     const value = e.target.value;
-    if (value.length - userInput.length > 15) return; 
-
+    if (value.length - userInput.length > 15) return;
     if (userInput.length === 0 && value.length === 1) onStart();
     if (value.length > userInput.length) playClick();
     setUserInput(value);
@@ -129,7 +112,6 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       className="phantom-viewport mx-auto group cursor-text relative overflow-hidden h-[250px] md:h-[300px] bg-card border-border/50"
       onClick={() => inputRef.current?.focus()}
     >
-      {/* Scrollable Container Animated via Motion */}
       <motion.div 
         ref={scrollRef}
         animate={{ y: scrollOffset }}
@@ -151,7 +133,6 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
           onDrop={(e) => e.preventDefault()}
         />
 
-        {/* Dynamic Cursor */}
         <motion.div 
           animate={{ 
             x: cursorPos.left, 
@@ -176,7 +157,6 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         ))}
       </motion.div>
 
-      {/* Focus Overlay */}
       <AnimatePresence>
         <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-focus-within:pointer-events-none group-focus-within:opacity-0 transition-all duration-500 pointer-events-none z-50">
            <div className="flex flex-col items-center gap-6">
