@@ -29,18 +29,17 @@ const Test = () => {
   const generateInitialContent = useCallback((l = lang, d = difficulty) => {
     const list = difficultyData[l][d] || difficultyData.english.medium;
     let initialText = "";
-
+    
+    // Shuffle and pick sentences for all modes to ensure variety
     const shuffled = [...list].sort(() => 0.5 - Math.random());
-
-    // CHANGE THESE NUMBERS:
+    
+    // Shifting logic: Easy mode starts at top, Medium/Hard start with more content
     if (d === 'easy') {
       initialText = shuffled.slice(0, 3).join(' ');
-    } else if (d === 'medium') {
-      initialText = shuffled.slice(0, 3).join(' '); // Changed from 5 to 3
     } else {
-      initialText = shuffled.slice(0, 3).join(' '); // Changed from 10 to 3
+      initialText = shuffled.slice(0, 10).join(' ');
     }
-
+    
     setTargetWords(initialText);
   }, [lang, difficulty]);
 
@@ -52,10 +51,8 @@ const Test = () => {
     const shuffled = [...list].sort(() => 0.5 - Math.random());
     if (difficulty === 'easy') {
       moreText = shuffled.slice(0, 2).join(' ');
-    } else if (difficulty === 'medium') {
-      moreText = shuffled.slice(0, 2).join(' ');
     } else {
-      moreText = shuffled.slice(0, 1).join(' ');
+      moreText = shuffled.slice(0, 5).join(' ');
     }
     setTargetWords(prev => prev + ' ' + moreText);
   }, [lang, difficulty]);
@@ -72,7 +69,8 @@ const Test = () => {
     setShowModal(false);
     startTime.current = null;
     setIsActive(false);
-    // Explicitly call with new values
+    // Explicitly call with new values to avoid stale closure if needed, 
+    // though generateInitialContent is in dependency array of useEffect above
     generateInitialContent(selectedLang, selectedDifficulty);
   };
 
