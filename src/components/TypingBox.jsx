@@ -98,9 +98,10 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         }
         // ❌ REMOVE the else completely (no scroll to top here)
       } else {
-        // Only for initial state (before typing starts)
+        // Immediately reset to top if not started or userInput is empty (Initial state)
         container.scrollTop = 0;
       }
+    }
 
     if (userInput.length > words.length * 0.8) {
       onAppend();
