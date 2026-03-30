@@ -9,15 +9,23 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const [lineHeight, setLineHeight] = useState(0);
   const [firstLineTop, setFirstLineTop] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+  const lastScrolledCharTop = useRef(-1);
+  const lastWords = useRef(words);
 
   const paddingTop = 48;
 
-  // Reset scroll & typing flag whenever words change
+  // Reset scroll & typing flag whenever words change (unless it's just an append)
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-    setHasStarted(false);
-    setLineHeight(0);
-    setFirstLineTop(0);
+    const isAppend = words.startsWith(lastWords.current) && lastWords.current.length > 0;
+    
+    if (!isAppend) {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      setHasStarted(false);
+      setLineHeight(0);
+      setFirstLineTop(0);
+      lastScrolledCharTop.current = -1;
+    }
+    lastWords.current = words;
   }, [words]);
 
   useEffect(() => {
@@ -77,20 +85,35 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // Threshold: only start scrolling when the active character is beyond the second line
-      const threshold = firstLineTop + lineHeight;
-      
-      if (hasStarted && userInput.length > 0 && lineHeight > 0) {
-        if (charTop > threshold) {
-          container.scrollTo({
-            top: charTop - threshold,
-            behavior: 'smooth'
-          });
-        } else {
-          container.scrollTo({ top: 0, behavior: 'smooth' });
+      if (hasStarted && userInput.length > 0) {
+        const containerHeight = container.clientHeight;
+        const currentScrollTop = container.scrollTop;
+        
+        // Define a safe zone where we don't need to scroll (20% to 70% of viewport)
+        const topThreshold = containerHeight * 0.2;
+        const bottomThreshold = containerHeight * 0.7;
+
+        const isTooHigh = charTop < currentScrollTop + topThreshold;
+        const isTooLow = (charTop + charHeight) > currentScrollTop + bottomThreshold;
+
+        if (isTooHigh || isTooLow) {
+          // Only trigger a new smooth scroll if the line changed
+          if (lastScrolledCharTop.current !== charTop) {
+            lastScrolledCharTop.current = charTop;
+            // Target putting the active line at ~40% of viewport height
+            const targetScrollTop = charTop - (containerHeight * 0.4);
+            container.scrollTo({
+              top: Math.max(0, targetScrollTop),
+              behavior: 'smooth'
+            });
+          }
         }
       } else {
-        container.scrollTo({ top: 0, behavior: 'smooth' });
+        // Reset to top if not started or userInput is empty (e.g. Initialize Engine)
+        if (container.scrollTop !== 0) {
+          container.scrollTo({ top: 0, behavior: 'smooth' });
+          lastScrolledCharTop.current = -1;
+        }
       }
     }
 
