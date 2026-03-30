@@ -99,8 +99,8 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
           container.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } else {
-        // Reset to top if not started or userInput is empty
-        container.scrollTo({ top: 0, behavior: 'smooth' });
+        // Immediately reset to top if not started or userInput is empty (Initial state)
+        container.scrollTop = 0;
       }
     }
 
