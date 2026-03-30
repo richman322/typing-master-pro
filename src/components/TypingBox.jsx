@@ -7,22 +7,18 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const [scrollOffset, setScrollOffset] = useState(0);
   const scrollRef = useRef(null);
-  const [activeLineTop, setActiveLineTop] = useState(0);
-  const currentLineRef = useRef(0);
-  const [hasStarted, setHasStarted] = useState(false); // typing start flag
+  const [lineHeight, setLineHeight] = useState(0);
+  const [firstLineTop, setFirstLineTop] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
 
-  const paddingTop = 48; // consistent padding for all modes
+  const paddingTop = 48;
 
   // Reset scroll & typing flag whenever words change
   useEffect(() => {
-    const container = scrollRef.current;
-    if (container) {
-      container.scrollTop = 0;
-      setScrollOffset(0);
-      setActiveLineTop(0);
-      currentLineRef.current = 0;
-      setHasStarted(false);
-    }
+    setScrollOffset(0);
+    setHasStarted(false);
+    setLineHeight(0);
+    setFirstLineTop(0);
   }, [words]);
 
   useEffect(() => {
@@ -49,7 +45,24 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   }, []);
 
   useLayoutEffect(() => {
+    const allChars = scrollRef.current?.querySelectorAll('span');
     const activeChar = scrollRef.current?.querySelector('.char-active');
+    
+    if (allChars && allChars.length > 0 && lineHeight === 0) {
+      const firstTop = allChars[0].offsetTop;
+      setFirstLineTop(firstTop);
+      let secondTop = 0;
+      for (let i = 1; i < allChars.length; i++) {
+        if (allChars[i].offsetTop > firstTop) {
+          secondTop = allChars[i].offsetTop;
+          break;
+        }
+      }
+      if (secondTop > 0) {
+        setLineHeight(secondTop - firstTop);
+      }
+    }
+
     if (activeChar) {
       const charTop = activeChar.offsetTop;
       const charHeight = activeChar.offsetHeight || 40;
@@ -62,13 +75,14 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      setActiveLineTop(charTop);
-
-      const threshold = paddingTop;
-      // Scroll only after typing starts
-      if (hasStarted) {
+      // Threshold is set to second line top so it only scrolls once on 3rd line
+      const threshold = firstLineTop + lineHeight;
+      
+      if (hasStarted && userInput.length > 0 && lineHeight > 0) {
         if (charTop > threshold) {
           setScrollOffset(-(charTop - threshold));
+        } else {
+          setScrollOffset(0);
         }
       } else {
         setScrollOffset(0);
@@ -78,7 +92,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     if (userInput.length > words.length * 0.8) {
       onAppend();
     }
-  }, [userInput, words, onAppend, hasStarted]);
+  }, [userInput, words, onAppend, hasStarted, lineHeight, firstLineTop]);
 
   const playClick = () => {
     if (!soundEnabled || !audioCtx.current) return;
@@ -119,7 +133,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   return (
     <div 
       className="phantom-viewport mx-auto group cursor-text relative bg-card border-border/50"
-      style={{ minHeight: '250px', maxHeight: 'none', overflowY: 'visible' }}
+      style={{ minHeight: '250px', maxHeight: 'none', overflowY: 'hidden' }}
       onClick={() => inputRef.current?.focus()}
     >
       <motion.div 
