@@ -85,35 +85,22 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      if (hasStarted && userInput.length > 0) {
-        const containerHeight = container.clientHeight;
-        const currentScrollTop = container.scrollTop;
-        
-        // Define a safe zone where we don't need to scroll (20% to 70% of viewport)
-        const topThreshold = containerHeight * 0.2;
-        const bottomThreshold = containerHeight * 0.7;
-
-        const isTooHigh = charTop < currentScrollTop + topThreshold;
-        const isTooLow = (charTop + charHeight) > currentScrollTop + bottomThreshold;
-
-        if (isTooHigh || isTooLow) {
-          // Only trigger a new smooth scroll if the line changed
-          if (lastScrolledCharTop.current !== charTop) {
-            lastScrolledCharTop.current = charTop;
-            // Target putting the active line at ~40% of viewport height
-            const targetScrollTop = charTop - (containerHeight * 0.4);
-            container.scrollTo({
-              top: Math.max(0, targetScrollTop),
-              behavior: 'smooth'
-            });
-          }
+      // Simple threshold-based scrolling:
+      // Only start scrolling when the active character is beyond the second line
+      const threshold = firstLineTop + lineHeight;
+      
+      if (hasStarted && userInput.length > 0 && lineHeight > 0) {
+        if (charTop > threshold) {
+          container.scrollTo({
+            top: charTop - threshold,
+            behavior: 'smooth'
+          });
+        } else {
+          container.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } else {
-        // Reset to top if not started or userInput is empty (e.g. Initialize Engine)
-        if (container.scrollTop !== 0) {
-          container.scrollTo({ top: 0, behavior: 'smooth' });
-          lastScrolledCharTop.current = -1;
-        }
+        // Reset to top if not started or userInput is empty
+        container.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
 
