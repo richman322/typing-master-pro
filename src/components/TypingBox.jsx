@@ -5,7 +5,6 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const inputRef = useRef(null);
   const audioCtx = useRef(null);
   const [cursorPos, setCursorPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
-  const [scrollOffset, setScrollOffset] = useState(0);
   const scrollRef = useRef(null);
   const [lineHeight, setLineHeight] = useState(0);
   const [firstLineTop, setFirstLineTop] = useState(0);
@@ -15,7 +14,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   // Reset scroll & typing flag whenever words change
   useEffect(() => {
-    setScrollOffset(0);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
     setHasStarted(false);
     setLineHeight(0);
     setFirstLineTop(0);
@@ -45,8 +44,11 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   }, []);
 
   useLayoutEffect(() => {
-    const allChars = scrollRef.current?.querySelectorAll('span');
-    const activeChar = scrollRef.current?.querySelector('.char-active');
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const allChars = container.querySelectorAll('span');
+    const activeChar = container.querySelector('.char-active');
     
     if (allChars && allChars.length > 0 && lineHeight === 0) {
       const firstTop = allChars[0].offsetTop;
@@ -75,17 +77,20 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // Threshold is set to second line top so it only scrolls once on 3rd line
+      // Threshold: only start scrolling when the active character is beyond the second line
       const threshold = firstLineTop + lineHeight;
       
       if (hasStarted && userInput.length > 0 && lineHeight > 0) {
         if (charTop > threshold) {
-          setScrollOffset(-(charTop - threshold));
+          container.scrollTo({
+            top: charTop - threshold,
+            behavior: 'smooth'
+          });
         } else {
-          setScrollOffset(0);
+          container.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } else {
-        setScrollOffset(0);
+        container.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
 
@@ -132,14 +137,12 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
 
   return (
     <div 
+      ref={scrollRef}
       className="phantom-viewport mx-auto group cursor-text relative bg-card border-border/50"
-      style={{ minHeight: '250px', maxHeight: 'none', overflowY: 'hidden' }}
+      style={{ minHeight: '250px', maxHeight: 'none', overflowY: 'auto' }}
       onClick={() => inputRef.current?.focus()}
     >
-      <motion.div 
-        ref={scrollRef}
-        animate={{ y: scrollOffset }}
-        transition={{ type: "spring", damping: 35, stiffness: 250, mass: 0.5 }}
+      <div 
         className="w-full px-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
         style={{ paddingTop: `${paddingTop}px`, paddingBottom: '48px' }}
       >
@@ -179,7 +182,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
             {char === ' ' ? '\u00A0' : char}
           </span>
         ))}
-      </motion.div>
+      </div>
 
       <AnimatePresence>
         <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-focus-within:pointer-events-none group-focus-within:opacity-0 transition-all duration-500 pointer-events-none z-50">
