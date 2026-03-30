@@ -19,7 +19,10 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     const isAppend = words.startsWith(lastWords.current) && lastWords.current.length > 0;
     
     if (!isAppend) {
-      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+        scrollRef.current.scrollTo(0, 0); // extra safety
+      }
       setHasStarted(false);
       setLineHeight(0);
       setFirstLineTop(0);
@@ -96,10 +99,9 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
             behavior: 'smooth'
           });
         }
-        // ❌ REMOVE the else completely (no scroll to top here)
-      } else {
-        // Immediately reset to top if not started or userInput is empty (Initial state)
-        container.scrollTop = 0;
+        // ✅ do nothing if within view
+      } else if (!hasStarted) {
+        container.scrollTop = 0; // only before typing starts
       }
     }
 
@@ -130,6 +132,9 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     if (value.length - userInput.length > 15) return;
 
     if (!hasStarted && value.length === 1) {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0; // 🔥 force top
+      }
       onStart();
       setHasStarted(true);
     }
