@@ -9,24 +9,21 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
   const [lineHeight, setLineHeight] = useState(0);
   const [firstLineTop, setFirstLineTop] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
-  const lastScrolledCharTop = useRef(-1);
   const lastWords = useRef(words);
 
   const paddingTop = 48;
 
-  // Reset scroll & typing flag whenever words change (unless it's just an append)
+  // Reset scroll whenever words change (new test)
   useEffect(() => {
     const isAppend = words.startsWith(lastWords.current) && lastWords.current.length > 0;
     
     if (!isAppend) {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 0;
-        scrollRef.current.scrollTo(0, 0); // extra safety
       }
       setHasStarted(false);
       setLineHeight(0);
       setFirstLineTop(0);
-      lastScrolledCharTop.current = -1;
     }
     lastWords.current = words;
   }, [words]);
@@ -58,10 +55,11 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     const container = scrollRef.current;
     if (!container) return;
 
-    const allChars = container.querySelectorAll('span');
+    const allChars = container.querySelectorAll('.char-unit');
     const activeChar = container.querySelector('.char-active');
     
-    if (allChars && allChars.length > 0 && lineHeight === 0) {
+    // 1. Calculate line height correctly if not yet set
+    if (allChars.length > 0 && lineHeight === 0) {
       const firstTop = allChars[0].offsetTop;
       setFirstLineTop(firstTop);
       let secondTop = 0;
@@ -76,6 +74,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       }
     }
 
+    // 2. Handle Scrolling
     if (activeChar) {
       const charTop = activeChar.offsetTop;
       const charHeight = activeChar.offsetHeight || 40;
@@ -88,21 +87,18 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         height: charHeight
       });
 
-      // Simple threshold-based scrolling:
-      // Only start scrolling when the active character is beyond the second line
-      const threshold = firstLineTop + lineHeight;
-      
+      // Only scroll if we have started typing and lineHeight is known
       if (hasStarted && userInput.length > 0 && lineHeight > 0) {
+        // threshold: only scroll if the active character is below the 2nd line
+        const threshold = firstLineTop + lineHeight;
+        
         if (charTop > threshold) {
           container.scrollTo({
             top: charTop - threshold,
             behavior: 'smooth'
           });
         }
-        // ✅ do nothing if within view
-      } else if (!hasStarted) {
-        container.scrollTop = 0; // only before typing starts
-      }
+      } 
     }
 
     if (userInput.length > words.length * 0.8) {
@@ -132,9 +128,6 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     if (value.length - userInput.length > 15) return;
 
     if (!hasStarted && value.length === 1) {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0; // 🔥 force top
-      }
       onStart();
       setHasStarted(true);
     }
@@ -153,17 +146,25 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
     <div 
       ref={scrollRef}
       className="phantom-viewport mx-auto group cursor-text relative bg-card border-border/50"
-      style={{ minHeight: '250px', maxHeight: 'none', overflowY: 'auto' }}
+      style={{ minHeight: '250px', maxHeight: '320px', overflowY: 'auto', scrollBehavior: 'smooth' }}
       onClick={() => inputRef.current?.focus()}
     >
       <div 
         className="w-full px-12 flex flex-wrap gap-x-[0.2em] gap-y-6 md:gap-y-8 text-3xl md:text-5xl tracking-tight leading-normal typing-font font-medium relative text-left"
-        style={{ paddingTop: `${paddingTop}px`, paddingBottom: '48px' }}
+        style={{ paddingTop: `${paddingTop}px`, paddingBottom: '150px' }}
       >
+        {/* FIX: Input is now small and moves with cursor to prevent browser jump-scrolling */}
         <input
           ref={inputRef}
           type="text"
-          className="absolute inset-0 opacity-0 cursor-default z-0"
+          style={{ 
+            position: 'absolute', 
+            top: cursorPos.top, 
+            left: cursorPos.left, 
+            opacity: 0, 
+            width: '10px', 
+            zIndex: -1 
+          }}
           value={userInput}
           onChange={handleChange}
           autoFocus
@@ -191,7 +192,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         {words.split('').map((char, index) => (
           <span 
             key={index} 
-            className={`relative z-10 transition-colors duration-150 ${getCharStatus(index)}`}
+            className={`char-unit relative z-10 transition-colors duration-150 ${getCharStatus(index)}`}
           >
             {char === ' ' ? '\u00A0' : char}
           </span>
@@ -199,12 +200,14 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       </div>
 
       <AnimatePresence>
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-focus-within:pointer-events-none group-focus-within:opacity-0 transition-all duration-500 pointer-events-none z-50">
-           <div className="flex flex-col items-center gap-6">
-              <div className="w-14 h-14 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin" />
-              <span className="text-sm font-black uppercase tracking-[0.5em] text-indigo-500 animate-pulse">Click to Focus</span>
+        {!hasStarted && (
+           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center group-focus-within:opacity-0 transition-all duration-500 pointer-events-none z-50">
+              <div className="flex flex-col items-center gap-6">
+                 <div className="w-14 h-14 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin" />
+                 <span className="text-sm font-black uppercase tracking-[0.5em] text-indigo-500 animate-pulse">Type to Start</span>
+              </div>
            </div>
-        </div>
+        )}
       </AnimatePresence>
       
       <style jsx>{`
@@ -216,6 +219,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
         .char-wrong { color: #f43f5e !important; background: rgba(244, 63, 94, 0.15); border-radius: 4px; }
         .char-untyped { color: rgba(156, 163, 175, 0.25); }
         .char-active { color: #6366f1 !important; }
+        .phantom-viewport::-webkit-scrollbar { width: 0px; }
       `}</style>
     </div>
   );
