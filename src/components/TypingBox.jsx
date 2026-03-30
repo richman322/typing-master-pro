@@ -90,7 +90,7 @@ const TypingBox = ({ words, userInput, setUserInput, onStart, onAppend, soundEna
       // Only scroll if we have started typing and lineHeight is known
       if (hasStarted && userInput.length > 0 && lineHeight > 0) {
         // threshold: only scroll if the active character is below the 2nd line
-        const threshold = firstLineTop + lineHeight;
+        const threshold = firstLineTop + (lineHeight*2);
         
         if (charTop > threshold) {
           container.scrollTo({
